@@ -23,6 +23,7 @@ export const TO_DO_STATUS_LABEL: Record<ToDoStatus, string> = {
 }
 
 export interface ToDo {
+  id: string
   name: string
   priority: ToDoPriority
   status: ToDoStatus

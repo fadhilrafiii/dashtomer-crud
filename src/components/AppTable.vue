@@ -29,7 +29,7 @@ const table = useVueTable(tableOptions)
           v-for="header in headerGroup.headers"
           :key="header.id"
           :colSpan="header.colSpan"
-          class="px-4 py-3 border border-slate-200 bg-slate-100 first:rounded-tl-lg last:rounded-tr-lg"
+          class="px-4 py-3 border border-slate-200 bg-slate-100 first:rounded-tl-lg last:rounded-tr-lg font-semibold"
         >
           <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
         </th>
