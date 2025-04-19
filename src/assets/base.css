@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --color-primary: #305cde;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}

@@ -1,0 +1,10 @@
+@import './base.css';
+@import './font.css';
+
+* {
+  font-family: Gilroy;
+}
+
+html {
+  scroll-behavior: smooth;
+}
