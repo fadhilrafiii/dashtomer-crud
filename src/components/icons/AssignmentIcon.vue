@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconProps } from '@/types/common'
+import { type IconProps } from '@/types/common'
 
 const props = defineProps<IconProps>()
 </script>

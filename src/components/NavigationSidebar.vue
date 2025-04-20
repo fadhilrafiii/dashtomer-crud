@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { DefineComponent } from 'vue'
 import type { IconProps } from '@/types/common'
-import { ref } from 'vue'
+import { ref, type DefineComponent } from 'vue'
 
 import { RouterLink } from 'vue-router'
 import AssignmentIcon from '@/components/icons/AssignmentIcon.vue'
@@ -13,24 +12,24 @@ interface Menu {
   icon: DefineComponent<IconProps>
 }
 
-const MENUS: Menu[] = [{ label: 'To Do', link: '/to-do', icon: AssignmentIcon }]
+const MENUS: Menu[] = [
+  { label: 'To Do', link: '/to-do', icon: AssignmentIcon as DefineComponent<IconProps> },
+]
 
 const isOpen = ref(false)
 const handleToggleSidebar = () => {
   isOpen.value = !isOpen.value
-  console.log('test', isOpen.value)
 }
-console.log(isOpen)
 </script>
 
 <template>
   <aside
     :class="{
-      'fixed lg:sticky top-0 left-0 bottom-0 bg-primary w-72 py-8 px-4 z-50 transition-all': true,
-      '!w-20': !isOpen,
+      'fixed lg:sticky !box-content top-0 left-0 bottom-0 bg-primary w-72 py-8 z-50 transition-all': true,
+      '!w-0 md:!w-20': !isOpen,
     }"
   >
-    <div class="flex flex-col items-center overflow-x-clip': true">
+    <div class="flex flex-col items-center overflow-x-clip px-4">
       <strong class="text-white font-semibold text-2xl"
         >D<span v-if="isOpen">ashtomer</span></strong
       >
@@ -38,7 +37,7 @@ console.log(isOpen)
         CRUD App
       </div>
     </div>
-    <nav class="py-8 overflow-x-clip">
+    <nav class="py-8 overflow-x-clip px-4">
       <ul>
         <li v-for="menu in MENUS" :key="menu.label">
           <RouterLink
@@ -49,7 +48,7 @@ console.log(isOpen)
             }"
             active-class="bg-blue-900"
           >
-            <component :is="menu.icon" size="24" color="white" />
+            <component :is="menu.icon" :size="24" color="white" />
             <span :class="{ hidden: !isOpen, 'whitespace-nowrap': true }">{{ menu.label }}</span>
           </RouterLink>
         </li>

@@ -7,7 +7,7 @@ import NavigationTop from './components/NavigationTop.vue'
 <template>
   <div class="flex h-screen w-full">
     <NavigationSidebar />
-    <main class="relative w-full pl-20 lg:pl-0">
+    <main class="relative w-full pl-0 md:pl-20 lg:pl-0">
       <NavigationTop />
       <div class="py-8 px-4 md:px-8">
         <RouterView />

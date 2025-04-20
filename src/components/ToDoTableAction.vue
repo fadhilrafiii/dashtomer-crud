@@ -6,7 +6,7 @@ import EditIcon from '@/components/icons/EditIcon.vue'
   <div class="flex justify-center items-center gap-x-2">
     <EditIcon
       :size="20"
-      color="#193cb8"
+      color="#305cde"
       role="button"
       aria-label="edit"
       class="cursor-pointer w-7 h-7 p-1 rounded-full hover:bg-blue-50"
