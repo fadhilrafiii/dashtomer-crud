@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watchEffect } from 'vue'
+import { reactive, toRef, watch, watchEffect } from 'vue'
 import AppInput from './AppInput.vue'
 import AppModal from './AppModal.vue'
 import {
@@ -16,6 +16,7 @@ import AppButton from './AppButton.vue'
 
 interface Props {
   isOpen: boolean
+  initialData?: ToDo
 }
 
 const props = defineProps<Props>()
@@ -29,6 +30,15 @@ const form = reactive<ToDoForm>({
   priority: null,
   status: null,
 })
+// For edit
+watch(toRef(props, 'initialData'), () => {
+  if (!props.initialData) return
+
+  form.name = props.initialData.name
+  form.priority = props.initialData.priority
+  form.status = props.initialData.status
+})
+
 const errorForm = reactive<Record<string, string>>({
   name: '',
   priority: '',
@@ -81,6 +91,7 @@ const resetForm = () => {
 
 const handleSubmit = () => {
   const isValid = validateForm()
+  console.log('handleSubmit', isValid)
   if (!isValid) return
 
   emit('submit', {
@@ -90,13 +101,14 @@ const handleSubmit = () => {
     id: uuid.v4(),
     createdAt: new Date().toUTCString(),
   })
+  console.log('test')
   resetForm()
 }
 </script>
 
 <template>
   <AppModal :is-open="props.isOpen" @close="() => emit('close')">
-    <template #title>To Do Form</template>
+    <template #title>To Do Form <span v-if="!!initialData">(Edit)</span></template>
     <template #content>
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-4">
         <AppInput

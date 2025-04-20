@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Multiselect from 'vue-multiselect'
-import { defineProps, defineEmits, computed } from 'vue'
+import { computed } from 'vue'
 
 type Option = Record<string, unknown>
 

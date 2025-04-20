@@ -32,9 +32,13 @@ const props = withDefaults(defineProps<Props<T>>(), {
 const columnFilters = ref<ColumnFiltersState>([])
 
 const data = ref<T[]>(props.data)
-watch(toRef(props, 'data'), (newVal: T[]) => {
-  data.value = [...newVal]
-})
+watch(
+  toRef(props, 'data'),
+  (newVal: T[]) => {
+    data.value = [...newVal]
+  },
+  { deep: true },
+)
 
 const table = useVueTable({
   get data() {

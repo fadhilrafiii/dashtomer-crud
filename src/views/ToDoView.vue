@@ -14,8 +14,10 @@ import {
   ToDoPriority,
   ToDoStatus,
   type ToDo,
+  type ToDoForm,
 } from '@/types/todo'
 import ToDoFormModal from '@/components/ToDoFormModal.vue'
+import ToDoDeleteConfirmModal from '@/components/ToDoDeleteConfirmModal.vue'
 
 const toDoPriorities = Object.keys(TO_DO_PRIORITY_LABEL).map((prio: string | ToDoPriority) => ({
   label: TO_DO_PRIORITY_LABEL[prio as ToDoPriority],
@@ -26,6 +28,44 @@ const toDoStatuses = Object.keys(TO_DO_STATUS_LABEL).map((status: string | ToDoS
   label: TO_DO_STATUS_LABEL[status as ToDoStatus],
   value: status as ToDoStatus,
 }))
+
+const data = ref<ToDo[]>([])
+
+const isFormModalOpen = ref(false)
+const handleToggleFormModal = () => {
+  isFormModalOpen.value = !isFormModalOpen.value
+}
+
+const isDeleteModalOpen = ref(false)
+const deleteId = ref<string>()
+const handleToggleDeleteModal = (id?: string) => {
+  if (!isDeleteModalOpen.value) deleteId.value = id
+  isDeleteModalOpen.value = !isDeleteModalOpen.value
+}
+
+const editId = ref<string>()
+
+const createToDo = (todo: ToDo) => {
+  data.value = [todo, ...data.value] // instead of unshift
+  localStorage.setItem(LOCAL_STORAGE_TODO, JSON.stringify(data.value))
+}
+
+const editToDo = (id: string, newToDo: ToDo) => {
+  data.value = data.value.map((todo: ToDo) => (todo.id === id ? newToDo : todo))
+  localStorage.setItem(LOCAL_STORAGE_TODO, JSON.stringify(data.value))
+}
+
+const handleSubmit = (payload: ToDo) => {
+  if (editId.value) {
+    editToDo(editId.value, payload)
+    handleToggleFormModal()
+  } else createToDo(payload)
+}
+
+const deleteToDo = (id: string) => {
+  data.value = data.value.filter((todo: ToDo) => todo.id !== id)
+  localStorage.setItem(LOCAL_STORAGE_TODO, JSON.stringify(data.value))
+}
 
 const columns = [
   {
@@ -87,7 +127,14 @@ const columns = [
     header: 'Action',
     cell: (info: CellContext<ToDo, unknown>) => {
       const todo = info.row.original
-      return h(ToDoTableAction, { todo, })
+      return h(ToDoTableAction, {
+        todo,
+        onDelete: () => handleToggleDeleteModal(info.row.original.id),
+        onEdit: () => {
+          editId.value = info.row.original.id
+          handleToggleFormModal()
+        },
+      })
     },
     meta: {
       sticky: 'right',
@@ -96,18 +143,6 @@ const columns = [
     },
   },
 ] as ColumnDef<ToDo>[]
-
-const data = ref<ToDo[]>([])
-
-const isFormModalOpen = ref(false)
-const handleToggleFormModal = () => {
-  isFormModalOpen.value = !isFormModalOpen.value
-}
-
-const createToDo = (todo: ToDo) => {
-  data.value = [todo, ...data.value] // instead of unshift
-  localStorage.setItem(LOCAL_STORAGE_TODO, JSON.stringify(data.value))
-}
 
 onMounted(() => {
   try {
@@ -129,6 +164,17 @@ onMounted(() => {
       </AppButton>
     </div>
     <AppTable :columns="columns" :data="data" sortable pagination />
-    <ToDoFormModal :is-open="isFormModalOpen" @close="handleToggleFormModal" @submit="createToDo" />
+    <ToDoFormModal
+      :is-open="isFormModalOpen"
+      :initial-data="data.find((todo: ToDo) => todo.id === editId)"
+      @close="handleToggleFormModal"
+      @submit="handleSubmit"
+    />
+    <ToDoDeleteConfirmModal
+      :is-open="isDeleteModalOpen"
+      :todo="data.find((todo: ToDo) => todo.id === deleteId)"
+      @close="handleToggleDeleteModal"
+      @confirm="deleteToDo"
+    />
   </div>
 </template>
