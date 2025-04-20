@@ -25,7 +25,7 @@ const handleToggleSidebar = () => {
 <template>
   <aside
     :class="{
-      'fixed lg:sticky !box-content top-0 left-0 bottom-0 bg-primary w-72 py-8 z-50 transition-all': true,
+      'fixed lg:sticky top-0 left-0 h-screen bg-primary w-72 py-8 z-50 transition-all': true,
       '!w-0 md:!w-20': !isOpen,
     }"
   >

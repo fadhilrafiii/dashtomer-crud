@@ -1,16 +1,33 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import { uuid } from 'vue-uuid'
+import { h, onMounted, ref } from 'vue'
 import type { ColumnDef, CellContext } from '@tanstack/vue-table'
 
+import AppButton from '@/components/AppButton.vue'
 import AppTable from '@/components/AppTable.vue'
-import ToDoFilter from '@/components/ToDoFilter.vue'
 import ToDoStatusTag from '@/components/ToDoStatusTag.vue'
 import ToDoPriorityTag from '@/components/ToDoPriorityTag.vue'
 import ToDoTableAction from '@/components/ToDoTableAction.vue'
-import { ToDoPriority, ToDoStatus, type ToDo } from '@/types/todo'
+import {
+  LOCAL_STORAGE_TODO,
+  TO_DO_PRIORITY_LABEL,
+  TO_DO_STATUS_LABEL,
+  ToDoPriority,
+  ToDoStatus,
+  type ToDo,
+} from '@/types/todo'
+import ToDoFormModal from '@/components/ToDoFormModal.vue'
 
-const columns: ColumnDef<ToDo>[] = [
+const toDoPriorities = Object.keys(TO_DO_PRIORITY_LABEL).map((prio: string | ToDoPriority) => ({
+  label: TO_DO_PRIORITY_LABEL[prio as ToDoPriority],
+  value: prio as ToDoPriority,
+}))
+
+const toDoStatuses = Object.keys(TO_DO_STATUS_LABEL).map((status: string | ToDoStatus) => ({
+  label: TO_DO_STATUS_LABEL[status as ToDoStatus],
+  value: status as ToDoStatus,
+}))
+
+const columns = [
   {
     header: 'No',
     accessorFn: (_: ToDo, idx: number) => idx + 1,
@@ -21,6 +38,9 @@ const columns: ColumnDef<ToDo>[] = [
   {
     accessorKey: 'name',
     header: 'Task Name',
+    meta: {
+      filter: 'search',
+    },
   },
   {
     accessorKey: 'priority',
@@ -31,6 +51,8 @@ const columns: ColumnDef<ToDo>[] = [
     },
     meta: {
       cellClass: 'text-center',
+      filter: 'select',
+      filterOptions: toDoPriorities,
     },
   },
   {
@@ -42,25 +64,30 @@ const columns: ColumnDef<ToDo>[] = [
     },
     meta: {
       cellClass: 'text-center',
+      filter: 'select',
+      filterOptions: toDoStatuses,
     },
   },
   {
     accessorKey: 'createdAt',
     header: 'Created At',
-    cell: (info: CellContext<ToDo, Date>) => {
+    cell: (info: CellContext<ToDo, string>) => {
       const date = info.getValue()
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
-      }).format(date)
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+      }).format(new Date(date))
     },
   },
   {
     header: 'Action',
     cell: (info: CellContext<ToDo, unknown>) => {
       const todo = info.row.original
-      return h(ToDoTableAction, { todo })
+      return h(ToDoTableAction, { todo, })
     },
     meta: {
       sticky: 'right',
@@ -68,55 +95,40 @@ const columns: ColumnDef<ToDo>[] = [
       cellClass: 'text-center',
     },
   },
-]
+] as ColumnDef<ToDo>[]
 
-const data: ToDo[] = [
-  {
-    id: uuid.v4(),
-    name: 'Implement login form',
-    priority: ToDoPriority.High,
-    status: ToDoStatus.InProgress,
-    createdAt: new Date('2025-04-01'),
-  },
-  {
-    id: uuid.v4(),
-    name: 'Fix navbar responsiveness',
-    priority: ToDoPriority.Medium,
-    status: ToDoStatus.ToDo,
-    createdAt: new Date('2025-04-15'),
-  },
-  {
-    id: uuid.v4(),
-    name: 'Refactor user settings page',
-    priority: ToDoPriority.Low,
-    status: ToDoStatus.Done,
-    createdAt: new Date('2025-03-28'),
-  },
-  {
-    id: uuid.v4(),
-    name: 'Design analytics dashboard',
-    priority: ToDoPriority.High,
-    status: ToDoStatus.ToDo,
-    createdAt: new Date('2025-04-18'),
-  },
-  {
-    id: uuid.v4(),
-    name: 'Write unit tests for ToDo service',
-    priority: ToDoPriority.Medium,
-    status: ToDoStatus.InProgress,
-    createdAt: new Date('2025-04-10'),
-  },
-]
+const data = ref<ToDo[]>([])
+
+const isFormModalOpen = ref(false)
+const handleToggleFormModal = () => {
+  isFormModalOpen.value = !isFormModalOpen.value
+}
+
+const createToDo = (todo: ToDo) => {
+  data.value = [todo, ...data.value] // instead of unshift
+  localStorage.setItem(LOCAL_STORAGE_TODO, JSON.stringify(data.value))
+}
+
+onMounted(() => {
+  try {
+    const initialTodos = JSON.parse(localStorage.getItem(LOCAL_STORAGE_TODO) || '[]')
+    data.value = [...initialTodos]
+  } catch (error) {
+    console.error(error)
+    data.value = []
+  }
+})
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
     <div class="flex items-center gap-4 justify-between flex-wrap">
       <h1 class="text-xl lg:text-3xl font-semibold">To Do</h1>
+      <AppButton @click="handleToggleFormModal">
+        <template #content> + New To Do</template>
+      </AppButton>
     </div>
-    <ToDoFilter />
-    <div>
-      <AppTable :columns="columns" :data="data" sortable pagination />
-    </div>
+    <AppTable :columns="columns" :data="data" sortable pagination />
+    <ToDoFormModal :is-open="isFormModalOpen" @close="handleToggleFormModal" @submit="createToDo" />
   </div>
 </template>

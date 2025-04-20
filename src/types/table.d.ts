@@ -8,5 +8,7 @@ declare module '@tanstack/vue-table' {
     sticky?: 'right' | 'left'
     cellClass?: string
     headerClass?: string
+    filter?: 'search' | 'select'
+    filterOptions?: { label: string; value: string }[]
   }
 }

@@ -1,7 +1,7 @@
 export enum ToDoPriority {
-  Low = 2,
-  Medium = 1,
-  High = 0,
+  Low = '2',
+  Medium = '1',
+  High = '0',
 }
 
 export const TO_DO_PRIORITY_LABEL: Record<ToDoPriority, string> = {
@@ -11,9 +11,9 @@ export const TO_DO_PRIORITY_LABEL: Record<ToDoPriority, string> = {
 }
 
 export enum ToDoStatus {
-  ToDo = 0,
-  InProgress = 1,
-  Done = 2,
+  ToDo = '0',
+  InProgress = '1',
+  Done = '2',
 }
 
 export const TO_DO_STATUS_LABEL: Record<ToDoStatus, string> = {
@@ -27,5 +27,13 @@ export interface ToDo {
   name: string
   priority: ToDoPriority
   status: ToDoStatus
-  createdAt: Date
+  createdAt?: string
 }
+
+export interface ToDoForm {
+  name: string
+  priority: ToDoPriority | null
+  status: ToDoStatus | null
+}
+
+export const LOCAL_STORAGE_TODO = 'dashtomer_todo'

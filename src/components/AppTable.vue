@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T">
-import { ref } from 'vue'
+import { ref, toRef, watch } from 'vue'
 import {
   FlexRender,
   getCoreRowModel,
@@ -7,8 +7,13 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   type ColumnDef,
+  getFilteredRowModel,
+  type ColumnFiltersState,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
 } from '@tanstack/vue-table'
 import ChevronLeftIcon from './icons/ChevronLeftIcon.vue'
+import AppTableColumnFilter from './AppTableColumnFilter.vue'
 
 interface Props<T> {
   columns: ColumnDef<T>[]
@@ -24,12 +29,32 @@ const props = withDefaults(defineProps<Props<T>>(), {
   sortable: false,
 })
 
+const columnFilters = ref<ColumnFiltersState>([])
+
 const data = ref<T[]>(props.data)
+watch(toRef(props, 'data'), (newVal: T[]) => {
+  data.value = [...newVal]
+})
+
 const table = useVueTable({
-  data: data.value as T[],
+  get data() {
+    return data.value as T[]
+  },
+  state: {
+    get columnFilters() {
+      return columnFilters.value
+    },
+  },
+  onColumnFiltersChange: (updaterOrValue) => {
+    columnFilters.value =
+      typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue
+  },
   columns: props.columns,
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getFacetedRowModel: getFacetedRowModel(),
+  getFacetedUniqueValues: getFacetedUniqueValues(),
   getSortedRowModel: getSortedRowModel(),
   initialState: {
     pagination: {
@@ -39,32 +64,32 @@ const table = useVueTable({
   },
 })
 
-function toggleSort(columnId: string) {
+const toggleSort = (columnId: string) => {
   if (!props.sortable) return
   const column = table.getColumn(columnId)
   column?.toggleSorting()
 }
 
-function nextPage() {
+const nextPage = () => {
   if (table.getCanNextPage()) {
     table.nextPage()
   }
 }
 
-function previousPage() {
+const previousPage = () => {
   if (table.getCanPreviousPage()) {
     table.previousPage()
   }
 }
 
-function goToPage(pageIndex: number) {
+const goToPage = (pageIndex: number) => {
   table.setPageIndex(pageIndex)
 }
 </script>
 
 <template>
   <div class="w-full">
-    <div class="w-full overflow-x-auto relative rounded-lg shadow">
+    <div class="w-full overflow-x-auto relative rounded-lg">
       <table class="min-w-full border-collapse table-fixed">
         <thead>
           <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
@@ -72,22 +97,39 @@ function goToPage(pageIndex: number) {
               v-for="header in headerGroup.headers"
               :key="header.id"
               :colSpan="header.colSpan"
-              class="px-4 py-3 text-left bg-slate-100 border border-slate-200 font-semibold whitespace-nowrap"
+              class="px-4 py-3 text-left bg-slate-100 border border-slate-200 whitespace-nowrap"
               :class="[
                 props.sortable && header.column.getCanSort() ? 'cursor-pointer select-none' : '',
                 header.column.columnDef.meta?.headerClass ?? '',
                 header.index === 0 ? 'first:rounded-tl-lg' : '',
                 header.index === headerGroup.headers.length - 1 ? 'last:rounded-tr-lg' : '',
               ]"
-              @click="
-                props.sortable && header.column.getCanSort() ? toggleSort(header.column.id) : null
-              "
             >
-              <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center justify-between gap-2 font-semibold">
                 <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
-                <span v-if="props.sortable && header.column.getCanSort()">
+                <span
+                  v-if="props.sortable && header.column.getCanSort()"
+                  role="button"
+                  aria-label="sort"
+                  @click="
+                    props.sortable && header.column.getCanSort()
+                      ? toggleSort(header.column.id)
+                      : null
+                  "
+                >
                   {{ { asc: '▲', desc: '▼', false: '⇅' }[String(header.column.getIsSorted())] }}
                 </span>
+              </div>
+              <div
+                class="font-normal"
+                v-if="!!header.column.columnDef.meta?.filter && header.column.getCanFilter()"
+              >
+                <AppTableColumnFilter
+                  :type="header.column.columnDef.meta.filter"
+                  :column="header.column"
+                  :table="table"
+                  :options="header.column.columnDef.meta.filterOptions"
+                />
               </div>
             </th>
           </tr>

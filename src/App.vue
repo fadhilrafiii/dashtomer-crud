@@ -5,7 +5,7 @@ import NavigationTop from './components/NavigationTop.vue'
 </script>
 
 <template>
-  <div class="flex h-screen w-full">
+  <div class="flex h-screen w-full overflow-y-auto">
     <NavigationSidebar />
     <main class="relative w-full pl-0 md:pl-20 lg:pl-0">
       <NavigationTop />
