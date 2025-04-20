@@ -14,6 +14,7 @@ import {
 } from '@tanstack/vue-table'
 import ChevronLeftIcon from './icons/ChevronLeftIcon.vue'
 import AppTableColumnFilter from './AppTableColumnFilter.vue'
+import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 
 interface Props<T> {
   columns: ColumnDef<T>[]
@@ -29,16 +30,37 @@ const props = withDefaults(defineProps<Props<T>>(), {
   sortable: false,
 })
 
-const columnFilters = ref<ColumnFiltersState>([])
+const router = useRouter()
+const route = useRoute()
+
+const initialFilters = Object.entries(route.query).map(([key, value]) => ({
+  id: key,
+  value: value as string,
+}))
+const columnFilters = ref<ColumnFiltersState>(initialFilters)
+
+const syncSearchParams = () => {
+  const qp: Record<string, unknown> = {}
+  const currentQuery = { ...route.query }
+  columnFilters.value.forEach((filter: { id: string; value: unknown }) => {
+    qp[filter.id] = filter.value as string
+  })
+  Object.keys(currentQuery).forEach((key: string) => {
+    if (!qp[key]) delete currentQuery[key]
+  })
+
+  router.push({
+    query: {
+      ...currentQuery,
+      ...(qp as LocationQueryRaw),
+    },
+  })
+}
 
 const data = ref<T[]>(props.data)
-watch(
-  toRef(props, 'data'),
-  (newVal: T[]) => {
-    data.value = [...newVal]
-  },
-  { deep: true },
-)
+watch(toRef(props, 'data'), (newVal: T[]) => {
+  data.value = [...newVal]
+})
 
 const table = useVueTable({
   get data() {
@@ -52,6 +74,8 @@ const table = useVueTable({
   onColumnFiltersChange: (updaterOrValue) => {
     columnFilters.value =
       typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue
+
+    syncSearchParams()
   },
   columns: props.columns,
   getCoreRowModel: getCoreRowModel(),

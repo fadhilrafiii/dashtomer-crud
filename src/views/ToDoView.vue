@@ -14,7 +14,6 @@ import {
   ToDoPriority,
   ToDoStatus,
   type ToDo,
-  type ToDoForm,
 } from '@/types/todo'
 import ToDoFormModal from '@/components/ToDoFormModal.vue'
 import ToDoDeleteConfirmModal from '@/components/ToDoDeleteConfirmModal.vue'
@@ -46,20 +45,25 @@ const handleToggleDeleteModal = (id?: string) => {
 const editId = ref<string>()
 
 const createToDo = (todo: ToDo) => {
-  data.value = [todo, ...data.value] // instead of unshift
+  data.value = [todo, ...data.value]
   localStorage.setItem(LOCAL_STORAGE_TODO, JSON.stringify(data.value))
 }
 
 const editToDo = (id: string, newToDo: ToDo) => {
-  data.value = data.value.map((todo: ToDo) => (todo.id === id ? newToDo : todo))
+  data.value = data.value.map((todo: ToDo) =>
+    todo.id === id ? { ...newToDo, createdAt: todo.createdAt } : todo,
+  )
   localStorage.setItem(LOCAL_STORAGE_TODO, JSON.stringify(data.value))
 }
 
 const handleSubmit = (payload: ToDo) => {
   if (editId.value) {
     editToDo(editId.value, payload)
+    editId.value = undefined
     handleToggleFormModal()
-  } else createToDo(payload)
+  } else {
+    createToDo(payload)
+  }
 }
 
 const deleteToDo = (id: string) => {

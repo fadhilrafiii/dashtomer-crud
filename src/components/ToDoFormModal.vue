@@ -91,7 +91,6 @@ const resetForm = () => {
 
 const handleSubmit = () => {
   const isValid = validateForm()
-  console.log('handleSubmit', isValid)
   if (!isValid) return
 
   emit('submit', {
@@ -101,7 +100,6 @@ const handleSubmit = () => {
     id: uuid.v4(),
     createdAt: new Date().toUTCString(),
   })
-  console.log('test')
   resetForm()
 }
 </script>
